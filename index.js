@@ -7,7 +7,6 @@ flattenBody(iniput, body)
 
 
 function extractInputsAndBody(code) {
-  o = []
   inputs = []
 
   for (node of code) {
@@ -31,7 +30,6 @@ function extractInputsAndBody(code) {
       throw new Error("Return has to be the last expression")
     }
     if (statement.type == "ExpressionStatement") {
-      const {left, right, operator} = statement.expression
       body.push(statement.expression)
     }
     if (statement.type == 'ReturnStatement') {
@@ -42,10 +40,10 @@ function extractInputsAndBody(code) {
 }
 
 function flattenBody(body) {
-  let o = []
+  let output = []
   for (statement of body) {
-    o.push(flattenStatement(statement))
+    output.push(flattenStatement(statement))
   }
-  return o
+  return output
 }
 
