@@ -1,31 +1,27 @@
-import {parse} from 'acorn' 
-
+import { parse } from 'acorn';
 
 export function codeToR1csWithInputs(code, inputVars) {
   let nextSymbol = 0;
 
   // Generate a dummy variable
-  const mksymbol =() => {
+  const mksymbol = () => {
     nextSymbol += 1;
     return `sym_${nextSymbol}`;
-  }
+  };
 
   const parsed = parse(code, { ecmaVersion: 2020 });
 
   const { inputs, body } = extractInputsAndBody(parsed.body);
-  console.log({ inputs, body });
 
   const flatcode = flattenBody(mksymbol, body);
-  console.log(flatcode);
+  printFlatcode(flatcode)
 
-  console.log('Input var assignment');
   getVarPlacement(inputs, flatcode);
   const { A, B, C } = flatcodeToR1cs(inputs, flatcode);
-  console.log({ A, B, C });
   const r = assignVariables(inputs, inputVars, flatcode);
-  console.log({
+  return {
     r, A, B, C,
-  });
+  };
 }
 
 function extractInputsAndBody(code) {
@@ -70,10 +66,14 @@ function flattenBody(mksymbol, body) {
   return output.flat(1);
 }
 
+function printFlatcode(flatcode) {
+  flatcode.forEach((fc, i) => {
+    console.log(`${i}: ${fc.target} = ${fc.left} ${fc.op} ${fc.right}`)
+  })
+}
 
 function flattenStatement(mksymbol, statement) {
   if (statement.type === 'ReturnStatement') {
-    console.log('return', statement.argument);
     return flattenExpr(mksymbol, '~out', statement.argument);
   }
   if (statement.type === 'ExpressionStatement') {
@@ -90,7 +90,6 @@ function Operation(op, target, left, right) {
 }
 
 function flattenExpr(mksymbol, left, right) {
-  console.log({ left, right });
   if (right.type === 'Identifier') {
     // x = y
     return [Operation('set', left, right.name)];
@@ -112,7 +111,7 @@ function flattenExpr(mksymbol, left, right) {
       if (right.right.raw === 0) {
         return [Operation('set', left, 1)];
       } if (right.right.raw === 1) {
-        return [Operation('set', left, flattenExpr(left, right.left))];
+        return [Operation('set', left, flattenExpr(mksymbol, left, right.left))];
       }
       // x**n
       let nxt;
@@ -125,7 +124,7 @@ function flattenExpr(mksymbol, left, right) {
       } else {
         nxt = mksymbol();
         base = nxt;
-        out = flattenExpr(base, right.left);
+        out = flattenExpr(mksymbol, base, right.left);
       }
 
       let latest;
@@ -142,7 +141,6 @@ function flattenExpr(mksymbol, left, right) {
       throw Error(`Bad operation: ${right.type}`);
     }
 
-    console.log('Processing subexpressions');
     let var1;
     let sub1;
     // If the subexpression is a variable or a number, then include it directly
@@ -153,7 +151,7 @@ function flattenExpr(mksymbol, left, right) {
       // If one of the subexpressions is itself a compound expression, recursively
       // apply this method to it using an intermediate variable
       var1 = mksymbol();
-      sub1 = flattenExpr(var1, right.left);
+      sub1 = flattenExpr(mksymbol, var1, right.left);
     }
 
     let var2;
@@ -164,7 +162,7 @@ function flattenExpr(mksymbol, left, right) {
       sub2 = [];
     } else {
       var2 = mksymbol();
-      sub2 = flattenExpr(var2, right.right);
+      sub2 = flattenExpr(mksymbol, var2, right.right);
     }
     // Last expression represents the assignment; sub1 and sub2 represent the
     // processing for the subexpression if any

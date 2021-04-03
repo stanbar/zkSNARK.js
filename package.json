@@ -2,11 +2,11 @@
   "name": "zksnark",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.mjs",
   "scripts": {
     "start": "node .",
     "lint": "eslint .",
-    "pretty": "eslint . --fix --ext .js"
+    "pretty": "eslint . --fix --ext .mjs"
   },
   "repository": {
     "type": "git",
