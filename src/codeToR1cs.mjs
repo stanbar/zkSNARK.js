@@ -1,6 +1,6 @@
 import { parse } from 'acorn';
 
-export function codeToR1csWithInputs(code, inputVars) {
+export default function codeToR1csWithInputs(code, inputVars) {
   let nextSymbol = 0;
 
   // Generate a dummy variable
@@ -14,13 +14,13 @@ export function codeToR1csWithInputs(code, inputVars) {
   const { inputs, body } = extractInputsAndBody(parsed.body);
 
   const flatcode = flattenBody(mksymbol, body);
-  printFlatcode(flatcode)
+  printFlatcode(flatcode);
 
-  getVarPlacement(inputs, flatcode);
+  const placements = getVarPlacement(inputs, flatcode);
   const { A, B, C } = flatcodeToR1cs(inputs, flatcode);
   const r = assignVariables(inputs, inputVars, flatcode);
   return {
-    r, A, B, C,
+    flatcode, placements, r, A, B, C,
   };
 }
 
@@ -68,8 +68,8 @@ function flattenBody(mksymbol, body) {
 
 function printFlatcode(flatcode) {
   flatcode.forEach((fc, i) => {
-    console.log(`${i}: ${fc.target} = ${fc.left} ${fc.op} ${fc.right}`)
-  })
+    console.log(`${i}: ${fc.target} = ${fc.left} ${fc.op} ${fc.right}`);
+  });
 }
 
 function flattenStatement(mksymbol, statement) {

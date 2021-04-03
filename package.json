@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/stanbar/zkSNARK.js#readme",
   "dependencies": {
-    "acorn": "^8.1.0"
+    "acorn": "^8.1.0",
+    "console-table-printer": "^2.8.2"
   },
   "devDependencies": {
     "@types/node": "^14.14.27",
